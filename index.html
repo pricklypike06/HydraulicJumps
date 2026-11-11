@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore hydraulic jumps in a rectangular channel with animated flow, live calculations and interactive graphs.">
+  <title>Hydraulic Jumps · Interactive Flow Lab</title>
+  <link rel="icon" href="data:,"><link rel="stylesheet" href="styles.css">
+  <script defer src="hydraulics.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#experiment">Skip to experiment</a>
+<header class="topbar"><a class="brand" href="#"><span class="brand-icon">≋</span> FLOW LAB <span class="version">V1</span></a><nav aria-label="Main navigation"><a href="#experiment">Experiment</a><a href="#theory">The science</a><a href="#project">Our project</a></nav><span class="course">FLUID MECHANICS / 2026</span></header>
+<main>
+  <section class="intro"><div><p class="eyebrow">AN INTERACTIVE EXPLORATION OF OPEN-CHANNEL FLOW</p><h1>A small change.<br>A <em>hydraulic jump.</em></h1><p class="lede">Watch shallow, fast water become deeper, slower flow. Change the upstream conditions to explore how a hydraulic jump dissipates mechanical energy.</p><a class="text-link" href="#experiment">Explore the experiment <span>↓</span></a></div><aside class="intro-note"><span class="note-number">01 /</span><p>Same flow rate.<br>Greater depth.<br><strong>Less mechanical energy.</strong></p><span class="small">A transition governed by continuity and momentum.</span></aside></section>
+
+  <section id="experiment" class="experiment" aria-labelledby="lab-title">
+    <div class="section-heading"><div><p class="eyebrow">THE VIRTUAL FLUME</p><h2 id="lab-title">Make the jump.</h2></div><span class="status" id="regime">Oscillating jump</span></div>
+    <div class="lab-grid">
+      <aside class="control-panel"><div class="panel-heading"><span>UPSTREAM CONDITIONS</span><button id="reset" class="quiet" type="button">Reset ↺</button></div>
+        <div class="field"><label for="depth">Water depth <span>y₁</span></label><div class="input-unit"><input id="depth" type="number" min="0.02" max="0.4" step="any" value="0.08" aria-describedby="depth-help"><span>m</span></div><input aria-label="Upstream depth slider" id="depth-range" type="range" min="0.02" max="0.4" step="any" value="0.08"><div class="limits" id="depth-help"><span>0.02 m</span><span>0.40 m</span></div></div>
+        <div class="field"><label for="velocity">Water velocity <span>V₁</span></label><div class="input-unit"><input id="velocity" type="number" min="0.2" max="8" step="any" value="3.2"><span>m/s</span></div><input aria-label="Upstream velocity slider" id="velocity-range" type="range" min="0.2" max="8" step="any" value="3.2"><div class="limits"><span>0.2 m/s</span><span>8.0 m/s</span></div></div>
+        <div class="field"><label for="width">Channel width <span>B</span></label><div class="input-unit"><input id="width" type="number" min="0.1" max="2" step="any" value="0.4"><span>m</span></div><input aria-label="Channel width slider" id="width-range" type="range" min="0.1" max="2" step="any" value="0.4"><div class="limits"><span>0.10 m</span><span>2.00 m</span></div></div>
+        <p id="input-message" class="input-message" role="status"></p>
+        <label class="preset-label" for="preset">TRY A FLOW REGIME</label><select id="preset"><option value="custom">Custom conditions</option><option value="subcritical">Subcritical · no jump</option><option value="undular">Undular jump</option><option value="weak">Weak jump</option><option value="oscillating" selected>Oscillating jump</option><option value="steady">Steady jump</option><option value="strong">Strong jump</option></select>
+        <p class="control-tip">Width changes total discharge and dissipated power. At fixed y₁ and V₁, it does not change the ideal depth ratio.</p>
+      </aside>
+      <div class="visual-panel"><div class="visual-toolbar"><span><i class="live-dot"></i> RECTANGULAR CHANNEL · SIDE VIEW</span><div><button type="button" id="slow" aria-pressed="false">½ speed</button><button type="button" id="pause" aria-pressed="false">Pause</button></div></div>
+        <canvas id="flume" width="1100" height="420" role="img" aria-label="Illustrative side view of water in a rectangular channel. Calculated upstream and downstream values are listed below."></canvas>
+        <div class="visual-caption"><span><span class="legend-line"></span> Water surface <span class="legend-dot"></span> Flow tracers</span><span>Illustration · not to scale</span></div>
+        <div class="flow-explanation" id="flow-explanation" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="metrics" aria-live="polite" aria-atomic="true">
+      <div><span>UPSTREAM FROUDE</span><strong id="fr1">—</strong><small id="fr1-note">Fr₁ = V₁ / √(g y₁)</small></div>
+      <div><span>DOWNSTREAM DEPTH</span><strong id="depth2">—</strong><small id="depth-ratio">Sequent depth y₂</small></div>
+      <div><span>ENERGY HEAD LOST</span><strong id="loss">—</strong><small id="loss-percent">Of upstream specific energy</small></div>
+      <div><span>DISCHARGE</span><strong id="discharge">—</strong><small>Q = B y₁ V₁</small></div>
+    </div>
+    <div class="secondary-results"><span>Downstream velocity <b id="velocity2">—</b></span><span>Downstream Fr₂ <b id="fr2">—</b></span><span>Dissipated power <b id="power">—</b></span><button id="export" type="button" class="text-link">Download calculated values ↓</button></div>
+    <p class="model-note">Model boundary: a free jump in a horizontal rectangular channel with tailwater matching the calculated sequent depth. The animation illustrates the transition; it does not predict turbulence, jump length, or jump location.</p>
+  </section>
+
+  <section class="plots-section" aria-labelledby="plots-title"><div class="section-heading"><div><p class="eyebrow">THE NUMBERS BEHIND THE FLOW</p><h2 id="plots-title">See the relationship.</h2></div><span class="small">Curves recalculate as you move the sliders.</span></div>
+    <div class="plot-grid"><article class="plot-card"><div class="plot-heading"><h3>Depth amplification</h3><span>y₂ / y₁</span></div><p>How much deeper does the water become?</p><svg id="ratio-plot" viewBox="0 0 560 300" role="img" aria-label="Sequent depth ratio against upstream Froude number"></svg><div class="plot-legend"><span><i></i> Ideal jump relationship</span><span><i class="orange"></i> Your conditions</span></div></article>
+    <article class="plot-card"><div class="plot-heading"><h3>Specific energy</h3><span>E / y₁</span></div><p>The same discharge, with energy dissipated across the jump.</p><svg id="energy-plot" viewBox="0 0 560 300" role="img" aria-label="Dimensionless specific energy against dimensionless water depth, with upstream and downstream states"></svg><div class="plot-legend"><span><i class="orange"></i> Upstream</span><span><i></i> Downstream</span><span>Dashed = critical depth</span></div></article></div>
+  </section>
+
+  <section id="theory" class="theory-section"><div class="section-heading"><div><p class="eyebrow">UNDERSTAND WHAT YOU SEE</p><h2>Fast and shallow → slow and deep.</h2></div></div>
+    <div class="theory-grid"><article><span class="step">01</span><h3>Recognize the flow</h3><p>The Froude number compares flow velocity to the speed of long, shallow-water surface waves. Supercritical flow has Fr &gt; 1; subcritical flow has Fr &lt; 1. At Fr = 1, the flow is critical.</p><div class="formula">Fr₁ = V₁ / √(g y₁)</div></article><article><span class="step">02</span><h3>Conserve mass and momentum</h3><p>The discharge stays the same. With negligible external drag and hydrostatic pressure at the end sections, the momentum balance gives the sequent-depth relation.</p><div class="formula">Q = B y₁ V₁ = B y₂ V₂<br>y₂/y₁ = ½[√(1 + 8Fr₁²) − 1]</div></article><article><span class="step">03</span><h3>Account for the energy loss</h3><p>Organized flow energy is transferred into turbulence and ultimately dissipated. Mechanical energy decreases across the jump; total energy is still conserved.</p><div class="formula">E = y + V²/(2g)<br>ΔE = (y₂ − y₁)³ / (4 y₁ y₂)</div></article></div>
+    <details><summary>Assumptions, limitations, and dimensional analysis</summary><div class="details-body"><p>The model assumes steady incompressible water flow (ρ = 1000 kg/m³, g = 9.81 m/s²), constant rectangular width, a horizontal bed, hydrostatic end-section pressure, uniform end-section velocities, and negligible bed/sidewall drag over the jump. Inputs describe the flow immediately upstream, not a gate-opening prediction.</p><p>Fr₁ &gt; 1 is necessary but does not guarantee that a stationary jump will occur at a particular location. Downstream boundary conditions determine whether a jump is held, swept downstream, or submerged. Here matching tailwater is assumed. An undular jump is represented by surface waves rather than a turbulent roller.</p><p>For the ideal model, y₂/y₁ depends only on Fr₁. Real jumps can also depend on Reynolds number, relative roughness, channel aspect ratio, and air entrainment. Dimensional analysis identifies possible dependencies; it does not derive the Bélanger equation or supply experimental correction factors.</p><p>The energy graph uses y/y₁ and E/y₁ at the current unit discharge q = y₁V₁. Both states lie on the same specific-energy curve, at different energies. The critical depth minimizes specific energy.</p></div></details>
+  </section>
+
+  <section id="project" class="project-section"><div><p class="eyebrow">A STUDENT PROJECT EXPLORING AI</p><h2>Built with AI.<br>Checked with engineering.</h2><p>This first version develops the two teammate-supplied HTML examples into an interactive teaching tool. Calculated results are model predictions, not experimental measurements.</p><a class="text-link" href="docs/PROJECT-NOTES.md">Read the development notes ↗</a></div><div class="project-checklist"><h3>Before final submission</h3><p class="small">These items are pending; this is not a completed project submission.</p><ul><li>Compare implementations from at least two identified AI models.</li><li>Record the second model’s critique and justify accepted/rejected suggestions.</li><li>Add verified group-member contributions and references.</li><li>Add the YouTube presentation link and a viewable verbatim auto-generated transcript.</li><li>Complete the practice-transcript and AI-critique submission steps.</li></ul></div></section>
+  <section class="references"><h3>Engineering references</h3><p><a href="https://www.usbr.gov/tsc/techreferences/hydraulics_lab/pubs/EM/EM25.pdf" target="_blank" rel="noopener">US Bureau of Reclamation · Hydraulic Design of Stilling Basins and Energy Dissipators</a><br><a href="https://www.fhwa.dot.gov/engineering/hydraulics/pubs/hec/hec14si.pdf" target="_blank" rel="noopener">Federal Highway Administration · Hydraulic Design of Energy Dissipators for Culverts and Channels</a></p><p class="small">These references support the ideal jump relations and regime descriptions. They do not validate the illustrative animation. No experimental dataset is claimed.</p></section>
+</main><footer><span>≋ HYDRAULIC JUMPS</span><span>Interactive Flow Lab · Version 1 · Educational model</span></footer>
+<noscript>This experiment needs JavaScript. The explanations and equations above remain available.</noscript>
+</body></html>
