@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<title>Hydraulic Jumps — Interactive Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f2f4f3; --panel:#ffffff; --panel2:#eaf2f1; --ink:#12252f; --muted:#5a6d76; --line:#d3dedb;
+  --accent:#0b6e6d; --accent2:#e86a2c; --water:#2f9bc4; --water2:#7cc7e2; --good:#16794a; --warn:#b45309; --bad:#b42318;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0d181e; --panel:#15242d; --panel2:#1a2f3a; --ink:#e8f0f2; --muted:#9ab0b9; --line:#2a3f4a; --accent:#3ec2bd; --accent2:#ff8a4d; --water:#2f9bc4; --water2:#5fb6d6; }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:"IBM Plex Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 18px 56px}
+h1,h2{font-family:"Newsreader",serif;line-height:1.05;letter-spacing:-.02em}
+h1{font-size:clamp(36px,6vw,62px);margin:10px 0 10px}
+h2{font-size:clamp(28px,4vw,38px);margin:0 0 10px}
+h3{font-size:17px;margin:18px 0 6px}
+p{margin:8px 0}
+.muted{color:var(--muted)} .mono{font-family:"IBM Plex Mono",monospace} .small{font-size:13px}
+.lede{font-size:19px;line-height:1.55;max-width:760px;color:var(--muted)}
+.lede strong{color:var(--ink)}
+.nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px}
+.nav a{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--panel);text-decoration:none;color:var(--ink);font-weight:600;font-size:14px}
+.lab{background:var(--ink);color:#eef6f7;border-radius:18px;overflow:hidden}
+@media (prefers-color-scheme: dark){.lab{background:#081117}}
+.lab-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center;padding:16px 18px 8px}
+.lab-head h2{color:#fff;margin:0;font-size:26px}
+.badge{display:inline-flex;align-items:center;min-height:32px;padding:4px 10px;border-radius:999px;background:#fff2e8;color:#8a3b0f;font-weight:700;font-size:13px}
+.badge.ok{background:#dcfce7;color:#14532d} .badge.warn{background:#fef3c7;color:#92400e}
+canvas{width:100%;height:auto;display:block;background:linear-gradient(#dbeef5,#eef7fa)}
+.controls{display:grid;grid-template-columns:1.2fr .8fr;gap:0}
+@media(max-width:820px){.controls{grid-template-columns:1fr}}
+.ctrl{padding:16px 18px 18px;display:grid;gap:14px}
+.field label{display:flex;justify-content:space-between;font-size:13px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:#b9d1d8}
+.field label output{font-family:"IBM Plex Mono",monospace;text-transform:none;color:#fff;font-size:14px}
+input[type=range]{width:100%;accent-color:#f97316;height:36px}
+.numrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.numrow label{font-size:12px;font-weight:700;color:#b9d1d8;display:grid;gap:4px}
+.numrow input{width:100%;padding:10px;border-radius:8px;border:1px solid #35505d;background:#0f242e;color:#fff;font-family:"IBM Plex Mono",monospace;font-size:15px;min-height:44px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btns button{min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid #4a6a78;background:transparent;color:#fff;font-weight:700;cursor:pointer}
+.btns button.primary{background:#fff;color:#12252f;border-color:#fff}
+.results{padding:16px 18px 18px;background:rgba(255,255,255,.06);border-left:1px solid rgba(255,255,255,.12)}
+@media(max-width:820px){.results{border-left:none;border-top:1px solid rgba(255,255,255,.12)}}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:rgba(255,255,255,.07);border-radius:10px;padding:10px 12px}
+.kpi span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9fc0cc;font-weight:700}
+.kpi b{font-family:"IBM Plex Mono",monospace;font-size:20px;line-height:1.2}
+.kpi small{display:block;color:#b9d1d8;font-size:12px}
+.section{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;margin-top:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.formula{background:var(--panel2);border-radius:10px;padding:14px 16px;font-family:"IBM Plex Mono",monospace;font-size:15px;line-height:1.7;overflow-x:auto}
+.formula b{color:var(--accent)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:12px 0}
+.steps li{counter-increment:s;padding:12px 0 12px 46px;position:relative;border-top:1px solid var(--line)}
+.steps li::before{content:counter(s);position:absolute;left:0;top:10px;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);font-family:"IBM Plex Mono",monospace}
+th{font-family:"IBM Plex Sans",sans-serif;text-align:right;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+th:first-child,td:first-child{text-align:left}
+.tablewrap{overflow-x:auto}
+@media(max-width:640px){.tablewrap{overflow:visible} table,thead,tbody,tr,td{display:block;width:100%} thead{display:none} tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:8px} td{border:none;text-align:left;display:flex;justify-content:space-between} td::before{content:attr(data-l);font-family:"IBM Plex Sans",sans-serif;font-weight:700;color:var(--muted);font-size:12px;text-transform:uppercase}}
+.callout{border-left:4px solid var(--accent2);background:#fff7ed;padding:14px 16px;border-radius:0 10px 10px 0;color:#431407}
+@media(prefers-color-scheme:dark){.callout{background:#2a1a10;color:#ffedd5}}
+.pillrow{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{font-size:12px;font-weight:700;padding:6px 9px;border-radius:999px;border:1px solid var(--line);background:var(--panel2)}
+.classTable td{text-align:left;font-family:"IBM Plex Sans",sans-serif}
+footer{padding:20px 4px;color:var(--muted);font-size:13px}
+.calc2{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;background:var(--panel2);padding:14px;border-radius:10px}
+.calc2 input{min-height:44px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-family:"IBM Plex Mono",monospace;width:100%}
+.calc2 button{min-height:44px;padding:10px 18px;border-radius:999px;background:var(--accent);color:#fff;border:none;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="mono small" style="color:var(--accent);font-weight:600">OPEN-CHANNEL HYDRAULICS · RECTANGULAR FLUME LAB</p>
+  <h1>The hydraulic jump, live in a flume.</h1>
+  <p class="lede">Fast, shallow <strong>supercritical</strong> water slams into slower, deeper <strong>subcritical</strong> water. In a few metres it throws up a turbulent roller, boils off energy as heat and sound, and leaves at a completely predictable depth. <strong>Change the numbers below — the jump moves, grows, and re-classifies in real time.</strong></p>
+  <nav class="nav" aria-label="Sections">
+    <a href="#lab">▶ Live experiment</a><a href="#theory">1 · First principles</a><a href="#data">2 · Theory + data</a><a href="#dim">3 · Dimensional analysis → correlations</a>
+  </nav>
+
+  <!-- LAB -->
+  <section class="lab" id="lab" aria-label="Interactive hydraulic jump experiment">
+    <div class="lab-head">
+      <div><h2>Rectangular channel — side view</h2><p style="margin:2px 0 0;color:#b9d1d8;font-size:14px">Sluice gate on the left · tailgate controls downstream depth · not to scale — depths exaggerated so you can see them</p></div>
+      <span class="badge" id="jumpBadge">Steady jump</span>
+    </div>
+    <canvas id="flume" width="1080" height="360" aria-label="Animation of water flowing in a rectangular channel forming a hydraulic jump with a surface roller"></canvas>
+    <div class="controls">
+      <div class="ctrl">
+        <div class="field"><label>Upstream depth y₁ <output id="o-y1">0.08 m</output></label><input type="range" id="r-y1" min="0.03" max="0.25" step="0.005" value="0.08"></div>
+        <div class="field"><label>Upstream velocity V₁ <output id="o-v1">3.20 m/s</output></label><input type="range" id="r-v1" min="0.5" max="6" step="0.1" value="3.2"></div>
+        <div class="field"><label>Channel width B <output id="o-b">0.40 m</output></label><input type="range" id="r-b" min="0.15" max="1" step="0.05" value="0.4"></div>
+        <div class="numrow">
+          <label>y₁ (m)<input type="number" id="n-y1" value="0.08" step="0.005" min="0.02" max="0.4"></label>
+          <label>V₁ (m/s)<input type="number" id="n-v1" value="3.2" step="0.1" min="0.2" max="8"></label>
+          <label>B (m)<input type="number" id="n-b" value="0.40" step="0.05" min="0.1" max="2"></label>
+        </div>
+        <div class="btns"><button class="primary" id="btnPlay" type="button">⏸ Pause flow</button><button id="btnSlow" type="button">Slow motion</button><button id="btnPreset" type="button">Try a strong jump →</button></div>
+        <p id="warn" class="small" style="margin:0;color:#fde68a;min-height:20px"></p>
+      </div>
+      <div class="results" aria-live="polite">
+        <div class="kpis">
+          <div class="kpi"><span>Froude Fr₁</span><b id="k-fr">—</b><small id="k-fr-note">V₁ / √(g·y₁)</small></div>
+          <div class="kpi"><span>Sequent depth y₂</span><b id="k-y2">—</b><small>Bélanger equation</small></div>
+          <div class="kpi"><span>Discharge Q</span><b id="k-q">—</b><small id="k-qq">q = — m²/s</small></div>
+          <div class="kpi"><span>Downstream V₂</span><b id="k-v2">—</b><small id="k-fr2">Fr₂ = —</small></div>
+          <div class="kpi"><span>Energy loss ΔE</span><b id="k-de">—</b><small id="k-dep">— % of E₁ lost</small></div>
+          <div class="kpi"><span>Power dissipated</span><b id="k-pow">—</b><small>ρgQ·ΔE — turned into turbulence &amp; heat</small></div>
+        </div>
+        <p class="small" style="color:#b9d1d8;margin:12px 0 0" id="k-desc"></p>
+      </div>
+    </div>
+  </section>
+
+  <p class="small muted" style="margin-top:10px">How to read the animation: thin, fast streaks upstream → a recirculating <b>roller</b> at the jump toe (water at the surface actually flows <i>backwards</i>) → deep, slow flow downstream. Raise V₁ or lower y₁ and Fr₁ climbs: the roller gets angrier, y₂ grows, and the white-water zone lengthens (≈ 6·(y₂−y₁)).</p>
+
+  <!-- 1 THEORY -->
+  <section class="section" id="theory">
+    <p class="mono small" style="color:var(--accent);font-weight:600">01 — FIRST PRINCIPLES</p>
+    <h2>Why the depth <em>must</em> jump</h2>
+    <p>A hydraulic jump is not a wave travelling along — it is a <strong>standing discontinuity</strong>. Flow arrives supercritical (Fr &gt; 1: faster than a surface wave can travel, so no information can get upstream) and must become subcritical downstream (Fr &lt; 1) because the tailwater, a gate, or a stilling basin demands a greater depth. A smooth transition is impossible — the specific-energy curve forbids it — so nature does it abruptly, in turbulence.</p>
+    <div class="grid2">
+      <div>
+        <h3>Start with two conservation laws</h3>
+        <p><strong>Continuity</strong> (mass, steady flow, rectangular channel of width B): the same discharge passes sections 1 and 2.</p>
+        <div class="formula">Q = B·y₁·V₁ = B·y₂·V₂ &nbsp;⇒&nbsp; <b>q = Q/B = y₁V₁ = y₂V₂</b></div>
+        <p style="margin-top:14px"><strong>Momentum</strong> in the streamwise direction, over a short horizontal, frictionless control volume. The only horizontal forces are the hydrostatic pressure forces on the two end sections — friction and weight have no streamwise component worth keeping over so short a length. That is the whole trick: <em>across a jump, momentum (specific force) is conserved, energy is not.</em></p>
+        <div class="formula">P₁ − P₂ = ρQ(V₂ − V₁)<br>P = ½·ρgB·y² &nbsp;(hydrostatic, centroid at y/2)</div>
+      </div>
+      <div>
+        <h3>Combine them → the Bélanger equation</h3>
+        <ol class="steps">
+          <li>Substitute P₁, P₂ and V₂ = q/y₂ into the momentum balance and divide through by ρgB.</li>
+          <li>Factor out (y₂ − y₁). One root is the trivial y₂ = y₁ (no jump). Discarding it leaves a quadratic in y₂/y₁.</li>
+          <li>Solve, and define <b>Fr₁ = V₁/√(g y₁)</b>. The density and width cancel completely.</li>
+        </ol>
+        <div class="formula"><b>y₂ / y₁ = ½ · ( √(1 + 8·Fr₁²) − 1 )</b><br><span class="small">y₁, y₂ are called <i>sequent</i> (conjugate) depths.</span></div>
+      </div>
+    </div>
+    <h3>Energy: what the jump costs</h3>
+    <p>Specific energy is E = y + V²/(2g). Because turbulence dissipates energy, E₂ &lt; E₁ always. Substituting the Bélanger result gives a remarkably clean loss formula — note it depends <em>only</em> on the two depths:</p>
+    <div class="formula"><b>ΔE = E₁ − E₂ = (y₂ − y₁)³ / (4·y₁·y₂)</b> &nbsp;&nbsp;·&nbsp;&nbsp; Jump length L<sub>j</sub> ≈ 6·(y₂ − y₁) &nbsp;(empirical) &nbsp;&nbsp;·&nbsp;&nbsp; Efficiency E₂/E₁ falls as Fr₁ rises</div>
+    <div class="callout" style="margin-top:14px"><strong>Why engineers love (and fear) it:</strong> that “lost” energy is exactly the point of a stilling basin below a dam spillway — the jump destroys energy that would otherwise scour the riverbed. But if tailwater is too low, the jump is <em>swept out</em> downstream; too high, and it drowns against the gate and loses its roller. Design is mostly about keeping the jump where you put it.</div>
+    <h3>Classification by Fr₁ (USBR)</h3>
+    <div class="tablewrap"><table class="classTable"><thead><tr><th>Fr₁</th><th>Type</th><th>What you see</th></tr></thead><tbody>
+      <tr><td class="mono">1.0 – 1.7</td><td><b>Undular</b></td><td>Standing waves on the surface, almost no roller, tiny energy loss.</td></tr>
+      <tr><td class="mono">1.7 – 2.5</td><td><b>Weak</b></td><td>Small roller, smooth downstream surface, ~5–15% energy loss.</td></tr>
+      <tr><td class="mono">2.5 – 4.5</td><td><b>Oscillating</b></td><td>Jump toe wanders back and forth; large waves travel far downstream — damaging to banks.</td></tr>
+      <tr><td class="mono">4.5 – 9.0</td><td><b>Steady</b></td><td>Well-balanced, stable toe, best energy dissipation (45–70%). The design target.</td></tr>
+      <tr><td class="mono">&gt; 9.0</td><td><b>Strong</b></td><td>Violent, choppy, up to ~85% loss — effective but rough on the structure.</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <!-- 2 DATA -->
+  <section class="section" id="data">
+    <p class="mono small" style="color:var(--accent);font-weight:600">02 — THEORY + EXPERIMENTAL DATA</p>
+    <h2>Theory is close — but systematically high</h2>
+    <p>In a typical undergraduate flume run (horizontal rectangular channel, sharp sluice gate, depths read with point gauges upstream and well downstream of the roller), the measured sequent depth lands a few percent <em>below</em> Bélanger. That is expected: the derivation ignored bed friction and assumed uniform velocity (momentum correction factor β = 1), hydrostatic pressure, and no air entrainment — all only approximately true, and air entrainment alone inflates a point-gauge reading in the roller zone if you measure too close to the toe.</p>
+    <div class="tablewrap"><table><thead><tr><th>Run</th><th>Fr₁</th><th>y₁ (mm)</th><th>y₂ theory (mm)</th><th>y₂ measured (mm)</th><th>Δ vs theory</th><th>ΔE/E₁ theory</th></tr></thead><tbody id="dataBody"></tbody></table></div>
+    <p class="small muted">Representative flume dataset in the pattern of published rectangular-channel experiments (e.g. Bélanger / Bakhmeteff-type validations). Values computed from the Bélanger equation with measured values 2–4% low — reproduce it in your own lab by varying gate opening and discharge and plotting your points on the chart below.</p>
+
+    <h3>Sequent-depth ratio vs Froude number</h3>
+    <svg viewBox="0 0 720 340" role="img" aria-label="Chart of sequent depth ratio versus upstream Froude number: theoretical Bélanger curve with experimental points slightly below it" style="width:100%;height:auto;background:var(--panel2);border-radius:10px">
+      <!-- grid -->
+      <g stroke="var(--line)" stroke-width="1"><path d="M70 30 V290 H690 M70 224 H690 M70 158 H690 M70 92 H690"/></g>
+      <g font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--muted)">
+        <text x="30" y="294">0</text><text x="22" y="228">3</text><text x="22" y="162">6</text><text x="22" y="96">9</text><text x="14" y="34">12</text>
+        <text x="66" y="312">1</text><text x="226" y="312">3</text><text x="386" y="312">5</text><text x="546" y="312">7</text><text x="660" y="312">9</text>
+        <text x="300" y="330">Upstream Froude number  Fr₁ →</text>
+        <text x="14" y="170" transform="rotate(-90 14 170)">y₂ / y₁ →</text>
+      </g>
+      <!-- theory curve: x=70+ (Fr-1)*77.5 , y=290 - ratio*21.67 -->
+      <path d="M70,269 L110,247 L150,228 L190,211 L230,196 L270,182 L310,169 L350,157 L390,146 L430,135 L470,125 L510,116 L550,107 L590,99 L630,91 L690,78" fill="none" stroke="#0b6e6d" stroke-width="3" stroke-linecap="round"/>
+      <!-- points: Fr 1.7 r1.89; 2.5 r2.98; 3.4 r4.19; 4.6 r5.85; 6.2 r8.05; 8.1 r10.61 -->
+      <g fill="#e86a2c" stroke="#fff" stroke-width="1.5">
+        <circle cx="124" cy="249" r="6"/><circle cx="186" cy="225" r="6"/><circle cx="256" cy="199" r="6"/><circle cx="349" cy="163" r="6"/><circle cx="473" cy="116" r="6"/><circle cx="620" cy="60" r="6"/>
+      </g>
+      <g font-family="IBM Plex Sans, sans-serif" font-size="13"><text x="430" y="46" fill="#0b6e6d" font-weight="700">— Bélanger theory</text><text x="430" y="66" fill="#e86a2c" font-weight="700">● Flume measurements</text></g>
+    </svg>
+    <div class="grid2" style="margin-top:14px">
+      <div><h3>What agrees</h3><p>Shape and scaling: y₂/y₁ grows almost linearly with Fr₁ at high Fr (asymptotically y₂/y₁ → √2·Fr₁ − ½). A log–log plot is straight — the first hint, used in §3, that one dimensionless group runs the whole show. Energy loss grows even faster, roughly as Fr₁³ at moderate Fr.</p></div>
+      <div><h3>What doesn't — and why</h3><p>Measured y₂ sits 2–4% low and the scatter grows with Fr₁. Causes, in likely order: bed + sidewall friction over the jump length (removes momentum the theory keeps), β &gt; 1 in the highly non-uniform toe region, entrained air biasing depth readings, and scale effects at low Reynolds number. None of these appear in Bélanger — which is precisely the gap dimensional analysis fills.</p></div>
+    </div>
+  </section>
+
+  <!-- 3 DIM -->
+  <section class="section" id="dim">
+    <p class="mono small" style="color:var(--accent);font-weight:600">03 — DIMENSIONAL ANALYSIS → CORRELATIONS</p>
+    <h2>Eight variables in, five groups out</h2>
+    <p>Suppose we refuse to do the momentum derivation and just ask: <em>what can y₂ depend on?</em> For a jump in a rectangular channel the honest list is:</p>
+    <div class="formula">y₂ = f( y₁, V₁, g, ρ, μ, B, k<sub>s</sub> )<br><span class="small">depths [L] · velocity [L T⁻¹] · gravity [L T⁻²] · density [M L⁻³] · viscosity [M L⁻¹ T⁻¹] · width [L] · roughness height [L] — 8 variables in total (y₂ plus the 7 it depends on), 3 fundamental dimensions (M, L, T)</span></div>
+    <p><strong>Buckingham Π theorem:</strong> 8 − 3 = <strong>5 independent dimensionless groups</strong>. Choosing y₁, V₁, ρ as repeating variables:</p>
+    <div class="pillrow"><span class="pill">Π₁ = y₂ / y₁ — the answer</span><span class="pill">Π₂ = V₁/√(g y₁) = Fr₁</span><span class="pill">Π₃ = ρV₁y₁/μ = Re₁</span><span class="pill">Π₄ = B / y₁</span><span class="pill">Π₅ = k<sub>s</sub>/y₁</span></div>
+    <div class="formula"><b>y₂/y₁ = Φ( Fr₁ , Re₁ , B/y₁ , k<sub>s</sub>/y₁ )</b></div>
+    <p>Now the experimental data earn their keep. Plot y₂/y₁ against Fr₁ for runs at different widths, depths and viscosities and — above Re₁ ≈ 10⁵, in wide channels (B/y₁ &gt; ~5) on smooth beds — <strong>all points collapse onto one curve</strong>. Re, aspect ratio and roughness drop out (to experimental accuracy), leaving a one-variable correlation — and it is the Bélanger curve, recovered without ever writing a force balance:</p>
+    <div class="formula"><b>y₂/y₁ = ½(√(1 + 8 Fr₁²) − 1)</b> &nbsp; valid: Fr₁ &gt; 1, Re₁ ≳ 10⁵, wide smooth channel</div>
+    <h3>The working correlations engineers actually fit</h3>
+    <ol class="steps">
+      <li><strong>Friction-corrected Bélanger (fit to the §2 data):</strong> (y₂/y₁)<sub>exp</sub> = 0.968 × (y₂/y₁)<sub>Bélanger</sub>, R² ≈ 0.999 over 1.7 ≤ Fr₁ ≤ 8.1. The single factor 0.968 absorbs average bed friction for a smooth lab flume — refit it for your channel.</li>
+      <li><strong>Energy-loss correlation:</strong> ΔE/y₁ = ( (y₂/y₁) − 1 )³ / ( 4·(y₂/y₁) ) with y₂/y₁ from above — or, fitted directly, ΔE/E₁ rises from ~0.05 at Fr₁ = 2 to ~0.70 at Fr₁ = 9.</li>
+      <li><strong>Jump-length correlation (USBR-type):</strong> L<sub>j</sub>/y₂ is a function of Fr₁ alone, rising from ≈ 4 at Fr₁ = 2 to a plateau ≈ 6.1–6.3 for Fr₁ ≥ 5 — the number you need to size a stilling basin floor.</li>
+      <li><strong>When the extra Π groups bite:</strong> below Re₁ ≈ 10⁵ (small lab flumes!) viscous scale effects lift y₂/y₁ measurably; in narrow channels sidewall friction does the same; on rough beds the 0.968 factor falls further. A correlation quoted without its Fr–Re range is only half a result.</li>
+    </ol>
+    <div class="calc2">
+      <div><label for="corrFr" style="font-weight:700;font-size:13px">TRY THE CORRELATION — enter Fr₁</label><input id="corrFr" type="number" value="4.5" step="0.1" min="1.01" max="15"></div>
+      <button type="button" id="corrBtn">Calculate</button>
+      <p id="corrOut" class="mono" style="grid-column:1/-1;margin:0;font-size:14px"></p>
+    </div>
+    <div class="callout" style="margin-top:16px"><strong>The full circle:</strong> first principles (§1) told us the <i>form</i> — momentum conservation forces the Bélanger curve. Experiment (§2) told us the <i>error</i> — a consistent few percent, in a consistent direction. Dimensional analysis (§3) told us <i>why one curve can describe every flume</i>, which extra effects to expect, and how to package the correction as a portable correlation. Theory, data, dimensions — each one checks the other two.</div>
+  </section>
+
+  <footer>Worked values on this page are computed live from the Bélanger (momentum) equation with g = 9.81 m/s² and ρ = 1000 kg/m³. The §2 table is a representative dataset following the published pattern for smooth rectangular flumes — treat it as the template for your own measurements, not as a substitute for them.</footer>
+</div>
+
+<script>
+(function(){
+  var g=9.81, rho=1000;
+  var els={};
+  ['r-y1','r-v1','r-b','n-y1','n-v1','n-b','o-y1','o-v1','o-b','k-fr','k-y2','k-q','k-qq','k-v2','k-fr2','k-de','k-dep','k-pow','k-desc','jumpBadge','warn','btnPlay','btnSlow','btnPreset'].forEach(function(id){els[id]=document.getElementById(id)});
+  var state={y1:0.08,v1:3.2,B:0.4,playing:true,slow:false,t:0};
+  function theory(fr){return 0.5*(Math.sqrt(1+8*fr*fr)-1)}
+  function classify(fr){
+    if(fr<=1) return ['No jump — subcritical','Flow is subcritical throughout: a disturbance can travel upstream, depths change smoothly, and there is no roller. Lower y₁ or raise V₁ past Fr₁ = 1 to form a jump.'];
+    if(fr<1.7) return ['Undular jump','Barely a jump: standing surface waves, almost no roller and very little energy dissipated.'];
+    if(fr<2.5) return ['Weak jump','A small, tidy roller forms. The downstream surface stays smooth; only a modest share of energy is lost.'];
+    if(fr<4.5) return ['Oscillating jump','The toe wanders upstream and downstream and sends large waves far along the channel — the type designers avoid near banks.'];
+    if(fr<9) return ['Steady jump','The textbook jump: stable toe, strong roller, and the best balance of energy dissipation vs. structural punishment. This is the stilling-basin design target.'];
+    return ['Strong jump','Violent and choppy with very high dissipation — effective, but hard on the flume and its lining.'];
+  }
+  function fmt(x,d){return x.toFixed(d)}
+  function compute(){
+    var y1=state.y1,v1=state.v1,B=state.B;
+    var fr=v1/Math.sqrt(g*y1), q=y1*v1, Q=q*B;
+    var ratio=fr>1?theory(fr):1, y2=y1*ratio, v2=q/y2, fr2=v2/Math.sqrt(g*y2);
+    var E1=y1+v1*v1/(2*g), E2=y2+v2*v2/(2*g), dE=Math.max(0,E1-E2), pow=rho*g*Q*dE;
+    els['o-y1'].textContent=fmt(y1,3)+' m'; els['o-v1'].textContent=fmt(v1,2)+' m/s'; els['o-b'].textContent=fmt(B,2)+' m';
+    els['k-fr'].textContent=fr>1?fmt(fr,2):fmt(fr,2); els['k-y2'].textContent=fr>1?fmt(y2,3)+' m':'—';
+    els['k-q'].textContent=fmt(Q,3)+' m³/s'; els['k-qq'].textContent='q = '+fmt(q,3)+' m²/s · B = '+fmt(B,2)+' m';
+    els['k-v2'].textContent=fr>1?fmt(v2,2)+' m/s':'—'; els['k-fr2'].textContent=fr>1?'Fr₂ = '+fmt(fr2,2)+' (subcritical ✓)':'';
+    els['k-de'].textContent=fr>1?fmt(dE,3)+' m':( '0.000 m'); els['k-dep'].textContent=fr>1?fmt(100*dE/E1,1)+'% of E₁ ('+fmt(E1,3)+' m) lost':'No dissipation without a jump';
+    els['k-pow'].textContent=fr>1?(pow>=1000?fmt(pow/1000,2)+' kW':fmt(pow,0)+' W'):'0 W';
+    var c=classify(fr); els['jumpBadge'].textContent=c[0]; els['jumpBadge'].className='badge'+(fr>1?(fr>=4.5&&fr<9?' ok':' warn'):' warn');
+    els['k-desc'].textContent=c[1]+(fr>1?' Jump length ≈ '+fmt(6*(y2-y1),2)+' m. Sequent ratio y₂/y₁ = '+fmt(ratio,2)+'.':'');
+    els['warn'].textContent=fr<=1?'⚠ Fr₁ ≤ 1 — no hydraulic jump can form. Increase V₁ or decrease y₁.':'';
+    return {fr:fr,y2:y2,ratio:ratio,dE:dE};
+  }
+  function sync(from){
+    if(from!=='r'){els['r-y1'].value=state.y1;els['r-v1'].value=state.v1;els['r-b'].value=state.B;}
+    if(from!=='n'){els['n-y1'].value=state.y1;els['n-v1'].value=state.v1;els['n-b'].value=state.B;}
+    compute();
+  }
+  [['r-y1','y1'],['r-v1','v1'],['r-b','B']].forEach(function(p){els[p[0]].addEventListener('input',function(){state[p[1]]=parseFloat(this.value);sync('r')})});
+  [['n-y1','y1'],['n-v1','v1'],['n-b','B']].forEach(function(p){els[p[0]].addEventListener('input',function(){var v=parseFloat(this.value);if(!isNaN(v)&&v>0){state[p[1]]=v;sync('n')}})});
+  els['btnPlay'].addEventListener('click',function(){state.playing=!state.playing;this.textContent=state.playing?'⏸ Pause flow':'▶ Play flow'});
+  els['btnSlow'].addEventListener('click',function(){state.slow=!state.slow;this.textContent=state.slow?'Normal speed':'Slow motion';this.style.background=state.slow?'#f97316':''});
+  els['btnPreset'].addEventListener('click',function(){state.y1=0.05;state.v1=4.6;state.B=0.4;sync()});
+
+  // data table
+  var runs=[[1.7,32],[2.5,38],[3.4,41],[4.6,45],[6.2,40],[8.1,36]];
+  var tb=document.getElementById('dataBody'), html='';
+  runs.forEach(function(r,i){
+    var fr=r[0], y1=r[1], th=theory(fr), y2t=y1*th;
+    var meas=[1.89,2.98,4.19,5.85,8.05,10.61][i]*y1;
+    var E1=1, dEratio=Math.pow(th-1,3)/(4*th); // ΔE/y1
+    var efrac=dEratio/(1+fr*fr/2);
+    html+='<tr><td data-l="Run">'+(i+1)+'</td><td data-l="Fr₁">'+fr.toFixed(1)+'</td><td data-l="y₁ (mm)">'+y1+'</td><td data-l="y₂ theory">'+y2t.toFixed(1)+'</td><td data-l="y₂ measured">'+meas.toFixed(1)+'</td><td data-l="Δ">'+(100*(meas-y2t)/y2t).toFixed(1)+'%</td><td data-l="ΔE/E₁">'+(100*efrac).toFixed(0)+'%</td></tr>';
+  });
+  tb.innerHTML=html;
+
+  // correlation calc
+  function corr(){
+    var fr=parseFloat(document.getElementById('corrFr').value);
+    var out=document.getElementById('corrOut');
+    if(isNaN(fr)||fr<=1){out.textContent='Enter Fr₁ > 1 — no jump exists at or below critical flow.';return}
+    var th=theory(fr), Lj=fr<2?4:(fr<5?4+(fr-2)*0.7:6.2);
+    out.textContent='Bélanger: y₂/y₁ = '+th.toFixed(2)+'  ·  friction-corrected (×0.968): '+(0.968*th).toFixed(2)+'  ·  Lⱼ/y₂ ≈ '+Lj.toFixed(1)+'  ·  ΔE/E₁ ≈ '+(100*Math.pow(th-1,3)/(4*th)/(1+fr*fr/2)).toFixed(0)+'%';
+  }
+  document.getElementById('corrBtn').addEventListener('click',corr); corr();
+
+  // ---- Canvas animation ----
+  var cv=document.getElementById('flume'), ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height, bedY=300, scale=620; // px per metre of depth (exaggerated)
+  var particles=[]; for(var i=0;i<140;i++) particles.push({x:Math.random()*W, off:Math.random(), sp:0.6+Math.random()*0.8, s:1+Math.random()*2});
+  var foam=[]; for(var j=0;j<50;j++) foam.push({a:Math.random()*Math.PI*2, r:Math.random(), sp:0.5+Math.random()});
+  var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function draw(){
+    var c=computeVals(); var y1=state.y1, y2=c.y2, fr=c.fr;
+    var h1=Math.min(120,y1*scale), h2=Math.min(230,y2*scale);
+    var toeX=430 + Math.sin(state.t*0.7)*(fr>2.5&&fr<4.5?16:3); // oscillating toe wanders
+    ctx.clearRect(0,0,W,H);
+    // walls / sky
+    ctx.fillStyle='#e8f3f7'; ctx.fillRect(0,0,W,H);
+    // water body
+    ctx.beginPath(); ctx.moveTo(0,bedY-h1);
+    ctx.lineTo(toeX-30,bedY-h1);
+    if(fr>1){ ctx.bezierCurveTo(toeX+10,bedY-h1-6, toeX+40,bedY-h2+18, toeX+110,bedY-h2); } else { ctx.lineTo(toeX+110,bedY-h1); }
+    ctx.lineTo(W,bedY-(fr>1?h2:h1)); ctx.lineTo(W,bedY); ctx.lineTo(0,bedY); ctx.closePath();
+    var grad=ctx.createLinearGradient(0,bedY-230,0,bedY); grad.addColorStop(0,'#6ec1de'); grad.addColorStop(1,'#1f7fa8');
+    ctx.fillStyle=grad; ctx.fill();
+    // gate
+    ctx.fillStyle='#334155'; ctx.fillRect(28,20,16,bedY-70-h1+18); ctx.fillStyle='#f97316'; ctx.fillRect(20,14,32,12);
+    ctx.fillStyle='#334155'; ctx.font='600 12px IBM Plex Sans'; ctx.fillText('SLUICE GATE',52,34);
+    // bed
+    ctx.fillStyle='#475569'; ctx.fillRect(0,bedY,W,14); ctx.fillStyle='#94a3b8'; for(var bx=0;bx<W;bx+=26) ctx.fillRect(bx,bedY+4,14,3);
+    ctx.fillStyle='#334155'; ctx.fillText('CHANNEL BED — width B into the page',8,336);
+    // depth labels
+    ctx.strokeStyle='#0f172a'; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(210,bedY); ctx.lineTo(210,bedY-h1); ctx.moveTo(W-120,bedY); ctx.lineTo(W-120,bedY-(fr>1?h2:h1)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#0f172a'; ctx.font='700 15px IBM Plex Mono';
+    ctx.fillText('y₁ '+y1.toFixed(3)+' m',150,bedY-h1-12);
+    if(fr>1) ctx.fillText('y₂ '+y2.toFixed(3)+' m',W-200,bedY-h2-12);
+    ctx.font='600 12px IBM Plex Sans'; ctx.fillText('V₁ → fast & shallow',90,bedY-h1-32);
+    if(fr>1) ctx.fillText('← slow & deep',W-210,bedY-Math.max(h2,40)+34);
+    // stream particles
+    var speedBase=state.playing?(state.slow?0.35:1):0;
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    particles.forEach(function(p){
+      var inJump = fr>1 && p.x>toeX-20 && p.x<toeX+120;
+      var localH = p.x<toeX? h1 : (fr>1? h2:h1);
+      var surf = bedY-localH;
+      var yy = surf + 8 + p.off*(localH-16);
+      var vx = (p.x<toeX? 3.4 : 1.0)*p.sp*speedBase*(state.slow?0.4:1);
+      if(inJump){ yy = surf+10+Math.sin(state.t*3+p.off*9)*10; vx*=0.25; }
+      if(!reduced && state.playing) p.x+=vx;
+      if(p.x>W+4){p.x=-4;p.off=Math.random()}
+      ctx.beginPath(); ctx.arc(p.x,yy,p.s,0,7); ctx.fill();
+    });
+    // roller
+    if(fr>1){
+      var cx=toeX+42, cy=bedY-h2+26, R=16+Math.min(14,fr*1.6);
+      ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=3;
+      for(var k=0;k<3;k++){ ctx.beginPath(); ctx.arc(cx,cy,R-k*5, state.t*2.2+k*2.1, state.t*2.2+k*2.1+3.6); ctx.stroke(); }
+      ctx.lineWidth=1; ctx.fillStyle='#0f172a'; ctx.font='700 12px IBM Plex Sans'; ctx.fillText('ROLLER — surface flow reverses',cx-70,cy-R-10);
+      // foam bursts
+      ctx.fillStyle='rgba(255,255,255,.9)';
+      foam.forEach(function(f){ var fx=toeX+10+f.r*130, fy=bedY-h2+Math.sin(f.a+state.t*f.sp*2)*8+4; ctx.beginPath(); ctx.arc(fx,fy,2.2,0,7); ctx.fill(); });
+      // toe marker
+      ctx.fillStyle='#e86a2c'; ctx.beginPath(); ctx.moveTo(toeX,bedY+18); ctx.lineTo(toeX-8,bedY+32); ctx.lineTo(toeX+8,bedY+32); ctx.closePath(); ctx.fill();
+      ctx.font='700 12px IBM Plex Sans'; ctx.fillText('JUMP TOE',toeX-28,bedY+48 > H-4 ? H-6 : bedY+48);
+    }
+    // Fr label
+    ctx.fillStyle='rgba(15,23,42,.85)'; roundRect(ctx,W-228,14,214,34,8); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='700 14px IBM Plex Mono'; ctx.fillText('Fr₁ = '+fr.toFixed(2)+(fr>1?'  ·  SUPERCRITICAL':'  ·  SUBCRITICAL'),W-216,36);
+  }
+  function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+  function computeVals(){ var fr=state.v1/Math.sqrt(g*state.y1); return {fr:fr, y2: fr>1? state.y1*theory(fr): state.y1}; }
+  function loop(){ if(state.playing && !reduced) state.t+= state.slow?0.016:0.045; draw(); requestAnimationFrame(loop); }
+  sync(); loop();
+})();
+</script>
+</body>
+</html>
