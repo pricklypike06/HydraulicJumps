@@ -83,6 +83,27 @@
   function curve(svg,points,x,y,color){el(svg,'path',{d:points.map(([a,b],i)=>(i?'L':'M')+x(a).toFixed(2)+','+y(b).toFixed(2)).join(' '),fill:'none',stroke:color,'stroke-width':2.5,'stroke-linejoin':'round'});}
   function point(svg,x,y,color,label){const p=el(svg,'circle',{cx:x,cy:y,r:5.5,fill:color,stroke:'#fff','stroke-width':2});el(p,'title',{},label);}
   function drawPlots(){
+    for (const row of document.querySelectorAll('.regimes tbody tr')) {
+      row.classList.toggle('current', row.cells[1].textContent === result.classification);
+    }
+    const momentum = $('momentum');
+    const force = y => y * y / 2 + result.q ** 2 / (g * y);
+    const maxDepth = 1.25 * Math.max(result.depth, result.depth2 || 0, result.criticalDepth);
+    const maxForce = 1.2 * Math.max(force(result.depth), force(maxDepth));
+    const axis = axes(momentum, maxForce, maxDepth, 'Specific force per unit width, M (m²)', 'Water depth, y (m)');
+    const samples = [];
+    const minDepth = Math.min(result.depth, result.criticalDepth) / 4;
+    for (let n = 0; n <= 300; n++) {
+      const y = minDepth * (maxDepth / minDepth) ** (n / 300);
+      if (force(y) <= maxForce) samples.push([force(y), y]);
+    }
+    curve(momentum, samples, axis.x, axis.y, '#879ea6');
+    const mx = axis.x(force(result.depth));
+    if (result.hasJump) {
+      el(momentum, 'line', {x1:mx,x2:mx,y1:axis.y(result.depth),y2:axis.y(result.depth2),stroke:'#637d80','stroke-dasharray':'4 4'});
+      point(momentum, mx, axis.y(result.depth2), '#087f86', 'Downstream depth');
+    }
+    point(momentum, mx, axis.y(result.depth), '#dc693c', 'Upstream depth');
     const ratioSvg=$('ratio-plot'),fmax=Math.max(10,Math.ceil(result.fr1*1.1));
     const rmax=(Math.sqrt(1+8*fmax*fmax)-1)/2*1.08;
     const a=axes(ratioSvg,fmax,rmax,'Upstream Froude number, Fr₁','Sequent depth ratio, y₂/y₁');
